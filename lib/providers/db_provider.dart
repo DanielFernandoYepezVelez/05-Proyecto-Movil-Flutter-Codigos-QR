@@ -1,6 +1,13 @@
+import 'dart:io';
+import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-/* Patron Singleton, Para Que Me Funcione En Toda 
+import 'package:path_provider/path_provider.dart';
+
+import 'package:qr_reader/models/scan_model.dart';
+export 'package:qr_reader/models/scan_model.dart';
+
+/* Patron Singleton, Para Que Me Funcione En Toda
   La Aplicación La Misma Instancia De Esta Clase
   De Base De Datos En Cualquier Parte Que Se
   Cree Dicha Instancia */
@@ -27,5 +34,46 @@ class DBProvider {
     return _database;
   }
 
-  Future<Database> initDB() async {}
+  Future<Database> initDB() async {
+    /* Path Donde Almacenaremos La Base De Datos */
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    final path = join(documentsDirectory.path, 'ScansDB.db');
+
+    print(path);
+
+    /* Crear La Base De Datos */
+    /* Se Debe Modificar La Version De La DB, Si Hacemos Cambios Estructurales */
+    return await openDatabase(path, version: 2, onOpen: (db) {},
+        onCreate: (Database db, int version) async {
+      await db.execute('''
+      CREATE TABLE Scans(
+        id INTEGER PRIMARY KEY,
+        tipo TEXT,
+        valor TEXT
+      )
+    ''');
+    });
+  }
+
+  Future<int> nuevoScanRaw(ScanModel nuevoScan) async {
+    final id = nuevoScan.id;
+    final tipo = nuevoScan.tipo;
+    final valor = nuevoScan.valor;
+
+    /* Verificar Que La Base De Datos Esta Lista */
+    final db = await database;
+
+    final res = await db.rawInsert(''' 
+      INSERT INTO Scans(id, tipo, value)
+        VALUES($id, $tipo, $valor)
+    ''');
+    return res;
+  }
+
+  nuevoScan(ScanModel nuevoScan) async {
+    final db = await database;
+    final res = await db.insert('Scans', nuevoScan.toJson());
+    print(res);
+    return res;
+  }
 }
