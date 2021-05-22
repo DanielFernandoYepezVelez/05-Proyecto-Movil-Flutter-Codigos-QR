@@ -35,15 +35,15 @@ class DBProvider {
   }
 
   Future<Database> initDB() async {
-    /* Path Donde Almacenaremos La Base De Datos */
+    /* Path Donde Almacenaremos La Base De Datos En El Dispositivo Movil (SQLite) */
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, 'ScansDB.db');
 
-    print(path);
+    print('Aqui Esta La Base De Datos En Nuestro Dispositivo ' + path);
 
     /* Crear La Base De Datos */
     /* Se Debe Modificar La Version De La DB, Si Hacemos Cambios Estructurales */
-    return await openDatabase(path, version: 2, onOpen: (db) {},
+    return await openDatabase(path, version: 3, onOpen: (db) {},
         onCreate: (Database db, int version) async {
       await db.execute('''
       CREATE TABLE Scans(
@@ -55,6 +55,9 @@ class DBProvider {
     });
   }
 
+  /* CON LA PALABRA RAW TENGO QUE ESPICIFICAR EL QUERY COMPLETO */
+  /* Formas Para Ingresar Datos A La Base De Datos */
+  /* FORMA #1 (FORMA LARGA) */
   Future<int> nuevoScanRaw(ScanModel nuevoScan) async {
     final id = nuevoScan.id;
     final tipo = nuevoScan.tipo;
@@ -64,16 +67,78 @@ class DBProvider {
     final db = await database;
 
     final res = await db.rawInsert(''' 
-      INSERT INTO Scans(id, tipo, value)
+      INSERT INTO Scans(id, tipo, valor)
         VALUES($id, $tipo, $valor)
     ''');
     return res;
   }
 
+  /* Formas Para Ingresar Datos A La Base De Datos */
+  /* FORMA #2 (FORMA CORTA) */
   nuevoScan(ScanModel nuevoScan) async {
     final db = await database;
     final res = await db.insert('Scans', nuevoScan.toJson());
+
+    /* El ID Del Ultimo Registro Que Se Inserto En La Base De Datos */
     print(res);
     return res;
   }
+
+  /* Formas Para Seleccionar Un Dato De La Base De Datos */
+  Future<ScanModel> getScanById(int id) async {
+    final db = await database;
+    final res = await db.query('Scans', where: 'id = ?', whereArgs: [id]);
+
+    return res.isNotEmpty ? ScanModel.fromJson(res.first) : null;
+  }
+
+  /* Formas Para Seleccionar TODOS Los Datos De La Base De Datos */
+  Future<List<ScanModel>> getTodosScans() async {
+    final db = await database;
+    final res = await db.query('Scans');
+
+    return res.isNotEmpty ? res.map((s) => ScanModel.fromJson(s)).toList() : [];
+  }
+
+  /* Formas Para Seleccionar TODOS Los Datos De La Base De Datos Por Tipo */
+  Future<List<ScanModel>> getScansTipo(String tipo) async {
+    final db = await database;
+    final res = await db.rawQuery('''
+      SELECT * FROM Scans WHERE tipo = $tipo
+    ''');
+
+    return res.isNotEmpty ? res.map((s) => ScanModel.fromJson(s)).toList() : [];
+  }
+
+  /* Formas Para Actualizar Los Datos De La Base De Datos Por ID */
+  Future<int> updateScan(ScanModel nuevoScan) async {
+    final db = await database;
+    final res = await db.update('Scans', nuevoScan.toJson(), where: 'id = ?', whereArgs: [nuevoScan.id]);
+    return res;
+  }
+
+  /* Formas Para Eliminar Los Datos De La Base De Datos Por ID */
+  Future<int> deleteScan(int id) async {
+    final db = await database;
+    final res = await db.delete('Scans', where: 'id = ?', whereArgs: [id]);
+    return res;
+  }
+
+  /* Formas Para Eliminar TODOS Los Datos De La Base De Datos */
+  Future<int> deleteAllScan() async {
+    final db = await database;
+    final res = await db.rawDelete('''
+      DELETE FROM Scans
+    ''');
+
+    return res;
+  }
+
+
+
+
+
+
+
+
 }

@@ -6,18 +6,18 @@ import 'package:qr_reader/providers/ui_provider.dart';
 class CustomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    /* Obtener El SelectedMenuOpt(Provider) Del Arbol De Widgets De Forma Dinámica */
     final uiProvider = Provider.of<UiProvider>(context);
-
     final currentIndex = uiProvider.selectedMenuOpt;
 
     return BottomNavigationBar(
         onTap: (int i) => uiProvider.selectedMenuOpt = i,
         currentIndex: currentIndex,
         elevation: 0,
-        items: [
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Mapa'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.compass_calibration), label: 'Direcciones'),
-        ]);
+          BottomNavigationBarItem(icon: Icon(Icons.compass_calibration), label: 'Direcciones'),
+        ]
+    );
   }
 }
