@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:qr_reader/models/scan_model.dart';
+/* En Cualquier Lugar Voy A Tener Una Sola Importación */
 export 'package:qr_reader/models/scan_model.dart';
 
 /* Patron Singleton, Para Que Me Funcione En Toda
@@ -12,11 +13,11 @@ export 'package:qr_reader/models/scan_model.dart';
   De Base De Datos En Cualquier Parte Que Se
   Cree Dicha Instancia */
 class DBProvider {
-  static Database _database;
 
+  /* Las TRES Siguientes Lineas De Código Son La Estructura De Un SINGLETON */
+  static Database _database;
   /* Este Es Un Singleton Con El Constructor De Esta Clase Privado */
   static final DBProvider db = DBProvider._();
-
   /* Esto Me Ayuda Que Cuando Yo Haga Un New DBProvider Siempre Voy A Tener La Mismas
   Instancias De Esta Clase, Es Deci,  Los Objetos Estan Apuntando A Esta Misma Clase,
   En Conclusión Que Los Objetos Sean Los Mismos */
@@ -36,22 +37,25 @@ class DBProvider {
 
   Future<Database> initDB() async {
     /* Path Donde Almacenaremos La Base De Datos En El Dispositivo Movil (SQLite) */
+    /* Si Se Elimina La Aplicación También Se Elimina El Archivo Donde Esta La Base De Datos */
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, 'ScansDB.db');
 
-    print('Aqui Esta La Base De Datos En Nuestro Dispositivo ' + path);
+    print('Aqui Esta La Base De Datos En Nuestro Dispositivo => ' + path);
 
     /* Crear La Base De Datos */
-    /* Se Debe Modificar La Version De La DB, Si Hacemos Cambios Estructurales */
+    /* Se Debe Modificar La Version De La DB, Si Hacemos Cambios Estructurales,
+    * Para Que Cree Las Tablas Nuevamente Y No Solo Abra La Base De Datos */
     return await openDatabase(path, version: 3, onOpen: (db) {},
         onCreate: (Database db, int version) async {
+      /* Estoy Definiendo Un String Multilinea Y Esto Es Propio De Dart (''') */
       await db.execute('''
-      CREATE TABLE Scans(
-        id INTEGER PRIMARY KEY,
-        tipo TEXT,
-        valor TEXT
-      )
-    ''');
+        CREATE TABLE Scans(
+          id INTEGER PRIMARY KEY,
+          tipo TEXT,
+          valor TEXT
+        )
+      ''');
     });
   }
 
@@ -59,23 +63,26 @@ class DBProvider {
   /* Formas Para Ingresar Datos A La Base De Datos */
   /* FORMA #1 (FORMA LARGA) */
   Future<int> nuevoScanRaw(ScanModel nuevoScan) async {
+    /* Aún No Tenemos La Desestructuración En Dart */
     final id = nuevoScan.id;
     final tipo = nuevoScan.tipo;
     final valor = nuevoScan.valor;
 
     /* Verificar Que La Base De Datos Esta Lista */
+    /* database => Es Nuestro Getter Que Trabaja Con La Propiedad Privada _database */
     final db = await database;
 
     final res = await db.rawInsert(''' 
       INSERT INTO Scans(id, tipo, valor)
         VALUES($id, $tipo, $valor)
     ''');
+
     return res;
   }
 
   /* Formas Para Ingresar Datos A La Base De Datos */
   /* FORMA #2 (FORMA CORTA) */
-  nuevoScan(ScanModel nuevoScan) async {
+  Future<int> nuevoScan(ScanModel nuevoScan) async {
     final db = await database;
     final res = await db.insert('Scans', nuevoScan.toJson());
 
@@ -89,6 +96,7 @@ class DBProvider {
     final db = await database;
     final res = await db.query('Scans', where: 'id = ?', whereArgs: [id]);
 
+    /* Este Método(fromJson) Me Crea Una Nueva Instancia De La Clase ScanModel, Por Eso Es Tan Conveniente */
     return res.isNotEmpty ? ScanModel.fromJson(res.first) : null;
   }
 
@@ -97,6 +105,7 @@ class DBProvider {
     final db = await database;
     final res = await db.query('Scans');
 
+    /* Lo Convierto En Una Lista, Por Que Es Un Iterable Y Necesito Retornar Una Lista */
     return res.isNotEmpty ? res.map((s) => ScanModel.fromJson(s)).toList() : [];
   }
 
@@ -133,12 +142,4 @@ class DBProvider {
 
     return res;
   }
-
-
-
-
-
-
-
-
 }
