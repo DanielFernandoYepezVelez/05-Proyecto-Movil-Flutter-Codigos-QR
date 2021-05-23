@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:qr_reader/providers/ui_provider.dart';
+import 'package:qr_reader/providers/scan_list.dart';
 
 import 'package:qr_reader/screens/direcciones.dart';
 import 'package:qr_reader/screens/historial_mapas.dart';
@@ -19,7 +20,9 @@ class HomePage extends StatelessWidget {
         elevation: 0,
         title: Text('Historial'),
         actions: [
-          IconButton(icon: Icon(Icons.delete_forever), onPressed: () {})
+          IconButton(icon: Icon(Icons.delete_forever), onPressed: () {
+            Provider.of<ScanListProvider>(context, listen: false).borrarTodos();
+          })
         ],
       ),
       body: _HomePageBody(),
@@ -40,14 +43,18 @@ class _HomePageBody extends StatelessWidget {
     /* Me Ayuda A Cambiar En El Tap Del Bottom Las Paginas Entre Historial Mapas(0) Y Direcciones(1) */
     final currentIndex = uiProvider.selectedMenuOpt;
 
+    /* Usar El ScanListProvider */
+    final scanListProvider = Provider.of<ScanListProvider>(context, listen: false);
+
     switch (currentIndex) {
       case 0:
+        scanListProvider.cargarScansTipo('geo');
         return HistorialMapasPage();
 
       case 1:
+        scanListProvider.cargarScansTipo('http');
         return DireccionesPage();
 
-        break;
       default:
         return HistorialMapasPage();
     }

@@ -46,7 +46,7 @@ class DBProvider {
     /* Crear La Base De Datos */
     /* Se Debe Modificar La Version De La DB, Si Hacemos Cambios Estructurales,
     * Para Que Cree Las Tablas Nuevamente Y No Solo Abra La Base De Datos */
-    return await openDatabase(path, version: 3, onOpen: (db) {},
+    return await openDatabase(path, version: 4, onOpen: (db) {},
         onCreate: (Database db, int version) async {
       /* Estoy Definiendo Un String Multilinea Y Esto Es Propio De Dart (''') */
       await db.execute('''
@@ -113,7 +113,7 @@ class DBProvider {
   Future<List<ScanModel>> getScansTipo(String tipo) async {
     final db = await database;
     final res = await db.rawQuery('''
-      SELECT * FROM Scans WHERE tipo = $tipo
+      SELECT * FROM Scans WHERE tipo LIKE '%$tipo%'
     ''');
 
     return res.isNotEmpty ? res.map((s) => ScanModel.fromJson(s)).toList() : [];
